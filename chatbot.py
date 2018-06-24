@@ -56,7 +56,7 @@ def clean_text(text):
     text = re.sub(r"\'d","would",text)
     text = re.sub(r"won't","will not",text)
     text = re.sub(r"can't","cannot",text)
-    text = re.sub(r"[-()\*<>;:!@#$%^&*.,]","",text)
+    text = re.sub(r"[-()\*<>;:!@#$%^&*\".,]","",text)
     return text
     
 cleaned_questions = []
@@ -92,9 +92,53 @@ for i,(key,count) in enumerate(qword_count):
         
         
         
+tokens  = ["<EOS>","<PAD>","<OUT>","<SOS>"]
+
+for token in tokens:
+    questionword2int[token] = len(questionword2int) +1
+    
+for token in tokens:
+    answerword2int[token] = len(answerword2int) +1
+    
+answerint2word = {w_i:w for w,w_i in answerword2int.items()}        
+questionint2word = {w_i:w for w,w_i in questionword2int.items()}        
+
+for i in range(len(cleaned_answers)):
+    cleaned_answers[i] += ' <EOS>'
         
+question_to_int = []
+for question in cleaned_questions:
+    ints = []
+    for word in question.split():
+        if word not in questionword2int:
+            ints.append(questionword2int['<OUT>'])
+        else:
+            ints.append(questionword2int[word])
+    question_to_int.append(ints)
+    
+    
         
-        
-        
-        
-        
+answer_to_int = []
+for answer in cleaned_answers:
+    ints = []
+    for word in answer.split():
+        if word not in answerword2int:
+            ints.append(answerword2int['<OUT>'])
+        else:
+            ints.append(answerword2int[word])
+    answer_to_int.append(ints)
+    
+
+enumerate_questions_sorted = sorted(enumerate(question_to_int),key=lambda x: len(x[1]) )
+k = True      
+for i in range(len(enumerate_questions_sorted)):
+    if(k and len(enumerate_questions_sorted[i][1])>0):
+        start = i
+        k = False
+    if(len(enumerate_questions_sorted[i][1])>25):
+        stop = i
+        break
+    
+sorted_questions = [x[1] for x in enumerate_questions_sorted[start:stop]]
+sorted_answers = [answer_to_int[x[0]] for x in enumerate_questions_sorted[start:stop]]
+
