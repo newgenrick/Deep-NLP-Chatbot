@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 import re
 import time
-
+from collections import Counter
 # loading data
 # the data used here is from cornell movie dataset 
 
@@ -41,3 +41,60 @@ for conversation in conversations_ids:
         questions.append(id2line[conversation[i]])
         answers.append(id2line[conversation[i+1]])
     
+        
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"i'm","i am",text)
+    text = re.sub(r"he's","he is",text)
+    text = re.sub(r"she's","she is",text)
+    text = re.sub(r"that's","that is",text)
+    text = re.sub(r"what's","what is",text)
+    text = re.sub(r"where's","where is",text)
+    text = re.sub(r"\'ll","will",text)
+    text = re.sub(r"\'ve","have",text)
+    text = re.sub(r"\'re","are",text)
+    text = re.sub(r"\'d","would",text)
+    text = re.sub(r"won't","will not",text)
+    text = re.sub(r"can't","cannot",text)
+    text = re.sub(r"[-()\*<>;:!@#$%^&*.,]","",text)
+    return text
+    
+cleaned_questions = []
+
+for question in questions:
+    cleaned_questions.append(clean_text(question))
+    
+cleaned_answers = []
+        
+for answer in answers:
+    cleaned_answers.append(clean_text(answer))
+    
+all_questions = " ".join(cleaned_questions)
+all_answers = " ".join(cleaned_answers)
+
+question_words = all_questions.split()
+answer_words = all_questions.split()
+
+qword_count = Counter(question_words).most_common()
+aword_count = Counter(answer_words).most_common()
+
+threshold = 20
+answerword2int = dict()
+questionword2int = dict()
+
+for i,(key,count) in enumerate(aword_count):
+    if count>threshold:
+        answerword2int[key] = i
+        
+for i,(key,count) in enumerate(qword_count):
+    if count>threshold:
+        questionword2int[key] = i       
+        
+        
+        
+        
+        
+        
+        
+        
+        
