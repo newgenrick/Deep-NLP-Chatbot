@@ -142,3 +142,31 @@ for i in range(len(enumerate_questions_sorted)):
 sorted_questions = [x[1] for x in enumerate_questions_sorted[start:stop]]
 sorted_answers = [answer_to_int[x[0]] for x in enumerate_questions_sorted[start:stop]]
 
+
+# seq2seq start ----------------------------------------------------------------->>
+
+def create_placeholders():
+    inputs = tf.placeholder(tf.int32,[None,None],name = 'inputs')
+    targets = tf.placeholder(tf.int32,[None,None],name = 'targets')
+    lr = tf.placeholder(tf.float32,name = 'learning_rate')
+    keep_prob = tf.placeholder(tf.float32,name = 'keep_prob')
+    return inputs,targets,lr,keep_prob
+
+
+def create_batches(targets,word2int,batch_size):
+    left_side = tf.fill([batch_size,1],word2int['<SOS>'])
+    right_side = tf.strided_slice(targets,[0,0],[batch_size,-1],[1,1])
+    batch = tf.concat([left_side,right_side],1)
+    return batch
+
+def encoder_rnn_layer(rnn_inputs,rnn_size,num_layers,keep_prob,sequence_length):
+    lstm = tf.contrib.rnn.BasicLSTMCell(rnn_size)
+    lstm_dropout = tf.contrib.rnn.DropoutWrapper(lstm,input_keep_prob = keep_prob)
+    encoder_cell = tf.contrib.rnn.MultiRNNCell([lstm_dropout]*num_layers)
+    _,encoder_state = tf.nn.bidirectional_dynamic_rnn(cell_fw = encoder_cell,
+                                                      cell_bw = encoder_cell,
+                                                      sequence_length = sequence_length,
+                                                      inputs = rnn_inputs,
+                                                      dtype = tf.float32)
+    return encoder_state
+
